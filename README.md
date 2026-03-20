@@ -20,16 +20,23 @@ Key Visualizations
 
 Salary distribution histogram + education level comparison
 Years of experience vs salary scatter (coloured by age)
+
 Job title salary box plots (top 8 roles)
-Correlation heatmap — confirms dropping Age (r=0.85 with Experience)
+
+Correlation heatmap - confirms dropping Age (r=0.85 with Experience)
+
 Train vs Test loss curve over 150 epochs
+
 Before/After scatter plot with regression line
 
 How to Run
 
 Download Salary_Data.csv from the Kaggle
+
 Place it in summative/linear_regression/
+
 Open multivariate.ipynb in Google Colab or Jupyter
+
 Run all cells top to bottom
 
 Requirements
