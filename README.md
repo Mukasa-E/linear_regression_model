@@ -4,7 +4,7 @@ Mission: To use skills in software engineering and app development to build prac
 
 Problem: A Nairobi tech startup needs data-driven salary benchmarks to hire young talent fairly — offering competitive rates without burning runway. This model predicts expected tech employee salary based on education, experience, job title, and gender, giving founders a fair hiring anchor in a competitive market.
 
-Dataset: Salary Prediction Dataset — Kaggle — 6,704 records of tech employees with features: Age, Gender, Education Level, Job Title, Years of Experience - Salary (USD). Rich in volume and variety with both categorical and numerical features.
+Dataset Selected: Salary Prediction Dataset — Kaggle — 6,704 records of tech employees with features: Age, Gender, Education Level, Job Title, Years of Experience - Salary (USD). Rich in volume and variety with both categorical and numerical features.
 
 Models Trained
 
