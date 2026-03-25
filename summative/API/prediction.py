@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import joblib
@@ -37,7 +37,7 @@ Predicts expected annual salary for a tech employee based on their profile.
 - **GET /model-info** — View current model details
 
 ### Mission
-Fair salary benchmarking for young tech talent in Kasarani & Nairobi, Kenya.
+Fair salary benchmarking for young tech talent in Nairobi, Kenya.
 """,
     version="1.0.0",
 )
@@ -154,6 +154,12 @@ async def root():
         "health": "/health",
         "predict": "/predict",
     }
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    # Avoid browser-generated 404 noise when no favicon file is provided.
+    return Response(status_code=204)
 
 
 @app.get("/health", tags=["Health"])
