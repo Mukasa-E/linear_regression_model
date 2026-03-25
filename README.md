@@ -41,3 +41,75 @@ Run all cells top to bottom
 
 Requirements
 pip install numpy pandas matplotlib seaborn scikit-learn joblib
+
+# Tech Salary Prediction API
+
+FastAPI backend for the Nairobi Software Company Hiring Tool.
+Predicts expected tech employee salary to help Nairobi startups benchmark pay fairly.
+
+## Live API (after deploying to Render)
+
+- Swagger UI (test all endpoints): `https://nairobi-salary-predictor.onrender.com/docs`
+- Prediction endpoint: `https://nairobi-salary-predictor.onrender.com/predict`
+- Retraining endpoint: `https://nairobi-salary-predictor.onrender.com/retrain`
+- Health check: `https://nairobi-salary-predictor.onrender.com/health`
+
+
+## Endpoints
+
+### POST /predict
+Predict salary for a candidate.
+
+Request body:
+
+```json
+{
+	"gender": "Female",
+	"education_level": "Master's",
+	"job_title": "Data Scientist",
+	"years_of_experience": 4.5
+}
+```
+
+Response example:
+
+```json
+{
+	"predicted_salary_usd": 95000.0,
+	"predicted_salary_kes_annual": 12350000.0,
+	"predicted_salary_kes_monthly": 1029166.67,
+	"input_received": {
+		"gender": "Female",
+		"education_level": "Master's",
+		"job_title": "Data Scientist",
+		"years_of_experience": 4.5
+	},
+	"model_used": "RandomForestRegressor"
+}
+```
+
+### POST /retrain
+Upload a new CSV file to retrain the model.
+
+- Accepts `multipart/form-data` with a `file` field
+- CSV must contain: `Gender, Education Level, Job Title, Years of Experience, Salary`
+- All three models are retrained and the best one is saved automatically
+
+### GET /model-info
+Returns current model type, feature list, and valid categorical input values.
+
+### GET /health
+Returns a health payload so you can verify the API is running.
+
+## Run Locally
+
+```bash
+# 1. Install dependencies
+python -m pip install -r requirements.txt
+
+# 2. Start the server (this project uses prediction.py)
+uvicorn prediction:app --reload
+
+# 3. Open docs
+# http://localhost:8000/docs
+```
