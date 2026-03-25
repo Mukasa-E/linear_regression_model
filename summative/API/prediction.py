@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, BackgroundTasks, Response
+from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import joblib
@@ -26,7 +27,7 @@ model, scaler, le_gender, le_education, le_jobtitle = load_artifacts()
 app = FastAPI(
     title="Tech Salary Prediction API",
     description="""
-## 💼 Nairobi Software Company — Tech Hiring Tool
+## Nairobi Software Company — Tech Hiring Tool
 
 Predicts expected annual salary for a tech employee based on their profile.
 
@@ -148,12 +149,7 @@ def encode_input(data: SalaryPredictionInput) -> np.ndarray:
 
 @app.get("/", tags=["Root"])
 async def root():
-    return {
-        "message": "Tech Salary Prediction API — Nairobi Hiring Tool",
-        "docs": "/docs",
-        "health": "/health",
-        "predict": "/predict",
-    }
+    return RedirectResponse(url="/docs")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
