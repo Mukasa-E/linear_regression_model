@@ -152,6 +152,11 @@ async def root():
     return RedirectResponse(url="/docs")
 
 
+@app.head("/", include_in_schema=False)
+async def root_head():
+    return Response(status_code=200)
+
+
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     # Avoid browser-generated 404 noise when no favicon file is provided.
