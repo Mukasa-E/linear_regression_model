@@ -21,7 +21,15 @@ def load_artifacts():
     le_job  = joblib.load(os.path.join(BASE_DIR, "le_jobtitle.pkl"))
     return model, scaler, le_gen, le_edu, le_job
 
-model, scaler, le_gender, le_education, le_jobtitle = load_artifacts()
+# Do not load artifacts at import time (avoid hard failures during import)
+# We'll load them on application startup so the server can start and return
+# a clear health message if artifacts failed to load.
+model = None
+scaler = None
+le_gender = None
+le_education = None
+le_jobtitle = None
+loader_error = None
 
 # FastAPI app 
 app = FastAPI(
@@ -140,8 +148,20 @@ def encode_input(data: SalaryPredictionInput) -> np.ndarray:
     job_enc     = le_jobtitle.transform([data.job_title])[0]
 
     # Feature order must match training: Years of Experience, Gender_enc, Education_enc, JobTitle_enc
-    row = np.array([[data.years_of_experience, gender_enc, edu_enc, job_enc]])
-    row_scaled = scaler.transform(row)
+    # Use a DataFrame with the same column names the scaler was fitted with to avoid
+    # the "X does not have valid feature names" warning when scaler was fitted on a DataFrame.
+    cols = ["Years of Experience", "Gender_enc", "Education_enc", "JobTitle_enc"]
+    row_df = pd.DataFrame([
+        {
+            "Years of Experience": data.years_of_experience,
+            "Gender_enc": gender_enc,
+            "Education_enc": edu_enc,
+            "JobTitle_enc": job_enc,
+        }
+    ])
+    # scaler may accept numpy arrays or DataFrames depending on how it was saved; using
+    # DataFrame with matching column names preserves feature-name checks.
+    row_scaled = scaler.transform(row_df)
     return row_scaled
 
 
@@ -166,9 +186,10 @@ async def favicon():
 @app.get("/health", tags=["Health"])
 async def health_check():
     return {
-        "status": "healthy",
+        "status": "healthy" if loader_error is None else "degraded",
         "model_loaded": model is not None,
         "scaler_loaded": scaler is not None,
+        "loader_error": str(loader_error) if loader_error is not None else None,
         "api_version": "1.0.0"
     }
 
@@ -203,6 +224,9 @@ async def predict_salary(data: SalaryPredictionInput):
     Returns predicted salary in USD and KES (annual + monthly).
     """
     try:
+        if model is None or scaler is None:
+            raise HTTPException(status_code=503, detail="Model artifacts not loaded. Check /health for details.")
+
         row_scaled = encode_input(data)
         predicted_usd = float(model.predict(row_scaled)[0])
 
