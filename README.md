@@ -49,10 +49,10 @@ Predicts expected tech employee salary to help Nairobi startups benchmark pay fa
 
 ## Live API (after deploying to Render)
 
-- Swagger UI (test all endpoints): `https://nairobi-salary-predictor.onrender.com/docs`
-- Prediction endpoint: `https://nairobi-salary-predictor.onrender.com/predict`
-- Retraining endpoint: `https://nairobi-salary-predictor.onrender.com/retrain`
-- Health check: `https://nairobi-salary-predictor.onrender.com/health`
+- Swagger UI (test all endpoints): `https://salary-prediction-api-lbh8.onrender.com/`
+- Prediction endpoint: `https://salary-prediction-api-lbh8.onrender.com/predict`
+- Retraining endpoint: `https://salary-prediction-api-lbh8.onrender.com/retrain`
+- Health check: `https://salary-prediction-api-lbh8.onrender.com/health`
 
 
 ## Endpoints
