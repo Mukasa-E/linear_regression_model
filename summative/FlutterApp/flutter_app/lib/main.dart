@@ -7,7 +7,7 @@ void main() {
   runApp(const SalaryPredictorApp());
 }
 
-// ─── App Root ──────────────────────────────────────────────────────────────────
+// App Root
 class SalaryPredictorApp extends StatelessWidget {
   const SalaryPredictorApp({super.key});
 
@@ -58,7 +58,7 @@ class SalaryPredictorApp extends StatelessWidget {
   }
 }
 
-// ─── Prediction Page ───────────────────────────────────────────────────────────
+//Prediction Page 
 class PredictionPage extends StatefulWidget {
   const PredictionPage({super.key});
 
@@ -68,7 +68,7 @@ class PredictionPage extends StatefulWidget {
 
 class _PredictionPageState extends State<PredictionPage>
     with SingleTickerProviderStateMixin {
-  // ── Controllers ───────────────────────────────────────────────────────────────
+  //Controllers 
   final _formKey = GlobalKey<FormState>();
   final _experienceController = TextEditingController();
 
@@ -76,7 +76,7 @@ class _PredictionPageState extends State<PredictionPage>
   String? _selectedEducation;
   String? _selectedJobTitle;
 
-  // ── State ─────────────────────────────────────────────────────────────────────
+  // State 
   bool _isLoading = false;
   Map<String, dynamic>? _result;
   String? _errorMessage;
@@ -85,21 +85,22 @@ class _PredictionPageState extends State<PredictionPage>
   late Animation<double> _fadeAnim;
   late Animation<Offset> _slideAnim;
 
-  // ── API config ────────────────────────────────────────────────────────────────
+  //API config 
   static const String _apiBase =
       'https://salary-prediction-api-lbh8.onrender.com';
 
-  // ── Dropdown options ──────────────────────────────────────────────────────────
-  final List<String> _genders = ['Male', 'Female'];
+  // Dropdown options 
+  List<String> _genders = ['Male', 'Female'];
 
-  final List<String> _educationLevels = [
+  List<String> _educationLevels = [
     'High School',
     "Bachelor's",
     "Master's",
     'PhD',
   ];
 
-  final List<String> _jobTitles = [
+  // fallback until a fetch gives the canonical list from the API
+  List<String> _jobTitles = [
     'Software Engineer',
     'Data Scientist',
     'Data Analyst',
@@ -108,33 +109,17 @@ class _PredictionPageState extends State<PredictionPage>
     'Marketing Analyst',
     'Product Manager',
     'Sales Associate',
-    'Director',
-    'HR Manager',
-    'Financial Analyst',
-    'Project Manager',
-    'Customer Service Representative',
-    'Operations Manager',
-    'Marketing Manager',
-    'Sales Manager',
-    'Receptionist',
-    'Software Developer',
-    'Web Developer',
-    'Content Writer',
-    'UX Designer',
-    'Graphic Designer',
-    'IT Support',
-    'Business Analyst',
-    'Account Manager',
-    'Research Scientist',
-    'Full Stack Engineer',
-    'DevOps Engineer',
-    'Machine Learning Engineer',
-    'Cybersecurity Analyst',
   ];
+
+  // true while we are fetching canonical lists from the API
+  bool _modelInfoLoading = true;
+  // true if the last fetch failed (show a Retry button)
+  bool _modelInfoFailed = false;
 
   @override
   void initState() {
     super.initState();
+  _fetchModelInfo();
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -152,6 +137,48 @@ class _PredictionPageState extends State<PredictionPage>
     ));
   }
 
+  Future<void> _fetchModelInfo() async {
+    // mark we're attempting a fetch
+    if (mounted) setState(() { _modelInfoLoading = true; _modelInfoFailed = false; });
+    try {
+      final uri = Uri.parse('$_apiBase/model-info');
+      // increase timeout slightly to allow for slow responses
+      final resp = await http.get(uri).timeout(const Duration(seconds: 15));
+      if (resp.statusCode == 200) {
+        final body = jsonDecode(resp.body) as Map<String, dynamic>;
+        final gotGenders = (body['known_genders'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [];
+        final gotEduc = (body['known_education_levels'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [];
+        final gotJobs = (body['all_job_titles'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            (body['job_titles_sample'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [];
+
+        setState(() {
+          if (gotGenders.isNotEmpty) _genders = gotGenders;
+          if (gotEduc.isNotEmpty) _educationLevels = gotEduc;
+          if (gotJobs.isNotEmpty) _jobTitles = gotJobs;
+        });
+      }
+    } catch (e) {
+      // keep fallbacks; record failure so UI can show a retry control
+      // ignore: avoid_print
+      print('Could not fetch model-info: $e');
+      if (mounted) setState(() => _modelInfoFailed = true);
+    } finally {
+      // mark loading finished regardless of success/failure
+      if (mounted) setState(() => _modelInfoLoading = false);
+    }
+  }
+
   @override
   void dispose() {
     _experienceController.dispose();
@@ -159,9 +186,20 @@ class _PredictionPageState extends State<PredictionPage>
     super.dispose();
   }
 
-  // ── API call ──────────────────────────────────────────────────────────────────
+  //API call 
   Future<void> _predict() async {
+    // Validate form fields first
     if (!_formKey.currentState!.validate()) return;
+
+    // Extra client-side validation to avoid submitting a job title
+    // that isn't in the canonical list (prevents 422 from the API).
+    if (_selectedJobTitle == null || !_jobTitles.contains(_selectedJobTitle)) {
+      setState(() {
+        _errorMessage = 'Please select a valid job title from the list.';
+      });
+      _animController.forward();
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -260,11 +298,12 @@ class _PredictionPageState extends State<PredictionPage>
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Padding(
+
                     padding: const EdgeInsets.only(right: 24, top: 20),
                     child: Icon(
                       Icons.work_outline_rounded,
                       size: 80,
-                      color: Colors.white.withOpacity(0.08),
+                      color: Color.fromRGBO(255, 255, 255, 0.08),
                     ),
                   ),
                 ),
@@ -354,11 +393,27 @@ class _PredictionPageState extends State<PredictionPage>
                             value: _selectedJobTitle,
                             items: _jobTitles,
                             icon: Icons.badge_outlined,
-                            onChanged: (v) =>
-                                setState(() => _selectedJobTitle = v),
-                            validator: (v) =>
-                                v == null ? 'Please select a job title' : null,
+                            onChanged: (v) => setState(() => _selectedJobTitle = v),
+                            validator: (v) {
+                              if (v == null) return 'Please select a job title';
+                              if (!_jobTitles.contains(v)) return 'Select a title from the list';
+                              return null;
+                            },
                           ),
+                          if (_modelInfoFailed)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 8.0),
+                              child: Row(
+                                children: [
+                                  const Text('Could not load canonical titles.'),
+                                  const SizedBox(width: 8),
+                                  TextButton(
+                                    onPressed: _fetchModelInfo,
+                                    child: const Text('Retry'),
+                                  ),
+                                ],
+                              ),
+                            ),
 
                           const SizedBox(height: 16),
 
@@ -404,7 +459,7 @@ class _PredictionPageState extends State<PredictionPage>
                     SizedBox(
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: _isLoading ? null : _predict,
+                        onPressed: (_isLoading || _modelInfoLoading) ? null : _predict,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1565C0),
                           foregroundColor: Colors.white,
@@ -486,13 +541,13 @@ class _PredictionPageState extends State<PredictionPage>
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF1565C0).withOpacity(0.07),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
+            boxShadow: [
+              BoxShadow(
+                color: Color.fromRGBO(21, 101, 192, 0.07),
+                blurRadius: 20,
+                offset: const Offset(0, 4),
+              ),
+            ],
       ),
       child: child,
     );
@@ -549,7 +604,7 @@ class _PredictionPageState extends State<PredictionPage>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF1565C0).withOpacity(0.3),
+                color: Color.fromRGBO(21, 101, 192, 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 6),
               ),
@@ -627,7 +682,7 @@ class _PredictionPageState extends State<PredictionPage>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.12),
+                        color: Color.fromRGBO(255, 255, 255, 0.12),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -669,7 +724,7 @@ class _PredictionPageState extends State<PredictionPage>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Color.fromRGBO(255, 255, 255, 0.1),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(

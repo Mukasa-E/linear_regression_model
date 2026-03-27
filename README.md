@@ -107,8 +107,8 @@ Returns a health payload so you can verify the API is running.
 # 1. Install dependencies
 python -m pip install -r requirements.txt
 
-# 2. Start the server (this project uses prediction.py)
-uvicorn prediction:app --reload
+# 2. Start the server
+uvicorn pgit rediction:app --reload
 
 # 3. Open docs
 # http://localhost:8000/docs
