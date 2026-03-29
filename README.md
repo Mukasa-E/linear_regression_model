@@ -50,8 +50,8 @@ Predicts expected tech employee salary to help Nairobi startups benchmark pay fa
 ## Live API (after deploying to Render)
 
 - Swagger UI (test all endpoints): `https://salary-prediction-api-lbh8.onrender.com/`
-- Prediction endpoint: `https://salary-prediction-api-lbh8.onrender.com/predict`
-- Retraining endpoint: `https://salary-prediction-api-lbh8.onrender.com/retrain`
+
+
 - Health check: `https://salary-prediction-api-lbh8.onrender.com/health`
 
 
@@ -77,39 +77,88 @@ Response example:
 {
 	"predicted_salary_usd": 95000.0,
 	"predicted_salary_kes_annual": 12350000.0,
-	"predicted_salary_kes_monthly": 1029166.67,
-	"input_received": {
+	# Tech Salary Prediction — Nairobi Software Company Hiring Tool
+
+	Repository: https://github.com/Mukasa-E/linear_regression_model
+
+	Notebook: `summative/linear_regression/multivariate.ipynb`
+	API code: `summative/API/`
+	Flutter app: `summative/FlutterApp/flutter_app/`
+
+	## Mission
+	Build a practical salary-benchmarking tool for Nairobi tech employers to make fair, data-driven hiring decisions.
+	Problem: Small startups need fast, reliable salary estimates to avoid overpaying or underpaying while conserving runway.
+
+	Dataset: Salary Prediction Dataset — Kaggle (6,704 records). Features: Age, Gender, Education Level, Job Title, Years of Experience, Salary (USD).
+
+	Model artifacts built with scikit-learn 1.6.1 (see requirements.txt). Use deployed API to avoid local pickle incompatibility.
+
+	
+	### Example /predict request (JSON)
+	```json
+	{
 		"gender": "Female",
 		"education_level": "Master's",
 		"job_title": "Data Scientist",
 		"years_of_experience": 4.5
-	},
-	"model_used": "RandomForestRegressor"
-}
-```
+	}
+	```
 
-### POST /retrain
-Upload a new CSV file to retrain the model.
+	### Example /retrain (multipart form)
+	```bash
+	curl -X POST "https://salary-prediction-api-lbh8.onrender.com/retrain" -F "file=@C:\temp\small_salary.csv"
+	```
 
-- Accepts `multipart/form-data` with a `file` field
-- CSV must contain: `Gender, Education Level, Job Title, Years of Experience, Salary`
-- All three models are retrained and the best one is saved automatically
+	---
 
-### GET /model-info
-Returns current model type, feature list, and valid categorical input values.
+	## Demo
+	Demo video: https://youtu.be/bK55vKJcJe8
 
-### GET /health
-Returns a health payload so you can verify the API is running.
+	---
 
-## Run Locally
+	## Run the backend locally
+	1. Open a terminal in `summative/API`
+	2. (Optional) Create & activate a virtualenv
 
-```bash
-# 1. Install dependencies
-python -m pip install -r requirements.txt
+	Windows (cmd.exe):
+	```cmd
+	python -m venv .venv
+	.venv\Scripts\activate
+	```
 
-# 2. Start the server
-uvicorn pgit rediction:app --reload
+	3. Install dependencies
+	```cmd
+	pip install -r requirements.txt
+	```
 
-# 3. Open docs
-# http://localhost:8000/docs
-```
+	4. Start the API
+	```cmd
+	uvicorn prediction:app --reload --host 0.0.0.0 --port 8000
+	```
+
+	Open http://localhost:8000/docs to test endpoints with Swagger UI.
+
+	---
+
+	## Run the mobile app (Flutter)
+	1. Install Flutter SDK: https://flutter.dev/docs/get-started/install
+	2. Open a terminal in `summative/FlutterApp/flutter_app`
+	3. Fetch packages:
+	```bash
+	flutter pub get
+	```
+	4. Run on Chrome (web):
+	```bash
+	flutter run -d chrome
+	```
+	Or run on an emulator/device:
+	```bash
+	flutter devices
+	flutter run -d <device-id>
+	```
+
+	
+
+	
+
+	
